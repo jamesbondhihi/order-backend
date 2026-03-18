@@ -24,9 +24,17 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { customer_name, email, phone, shipping_address, product_name, quantity, price } = req.body;
 
-      if (!customer_name || !email || !phone || !shipping_address || !product_name || !quantity || !price) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
+    if (
+  !customer_name ||
+  !email ||
+  !phone ||
+  !shipping_address ||
+  !product_name ||
+  quantity == null ||
+  price == null
+) {
+  return res.status(400).json({ error: 'Missing required fields' });
+}
 
       const query = `
         INSERT INTO orders (customer_name, email, phone, shipping_address, product_name, quantity, price)
