@@ -12,7 +12,6 @@ const pool = new Pool({
 });
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -55,16 +54,10 @@ module.exports = async (req, res) => {
         order_id: result.rows[0].id,
         created_at: result.rows[0].created_at
       });
-
     } else if (req.method === 'GET') {
       const query = 'SELECT * FROM orders ORDER BY created_at DESC;';
       const result = await pool.query(query);
       res.json(result.rows);
-
-    } else if (req.method === 'DELETE') {
-      await pool.query('TRUNCATE TABLE orders RESTART IDENTITY;');
-      res.status(200).json({ message: 'All orders deleted successfully' });
-
     } else {
       res.status(405).json({ error: 'Method not allowed' });
     }
