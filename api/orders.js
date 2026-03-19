@@ -33,11 +33,11 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      const query = `
-        INSERT INTO orders (customer_name, email, phone, shipping_address, product_name, quantity, price)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id, created_at;
-      `;
+     const query = `
+  INSERT INTO orders (customer_name, email, phone, shipping_address, product_name, quantity, price)
+  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  RETURNING id, created_at;
+`;
 
       const result = await pool.query(query, [
         customer_name,
