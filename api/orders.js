@@ -16,7 +16,10 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -37,17 +40,31 @@ module.exports = async (req, res) => {
         RETURNING id, created_at;
       `;
 
-      const result = await pool.query(query, [customer_name, email, phone || null, shipping_address || null, product_name, quantity, price]);
+      const result = await pool.query(query, [
+        customer_name,
+        email,
+        phone || null,
+        shipping_address || null,
+        product_name,
+        quantity,
+        price
+      ]);
 
       res.status(201).json({
         message: 'Order created successfully',
         order_id: result.rows[0].id,
         created_at: result.rows[0].created_at
       });
+
     } else if (req.method === 'GET') {
       const query = 'SELECT * FROM orders ORDER BY created_at DESC;';
       const result = await pool.query(query);
       res.json(result.rows);
+
+    } else if (req.method === 'DELETE') {
+      await pool.query('TRUNCATE TABLE orders RESTART IDENTITY;');
+      res.status(200).json({ message: 'All orders deleted successfully' });
+
     } else {
       res.status(405).json({ error: 'Method not allowed' });
     }
