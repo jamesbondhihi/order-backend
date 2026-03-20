@@ -11,11 +11,15 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Only POST allowed' });
+    return res.status(405).send('Only POST allowed');
   }
 
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
 
     const result = await pool.query(
       'SELECT * FROM admin_users WHERE username = $1',
@@ -42,7 +46,11 @@ module.exports = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    console.error('LOGIN ERROR FULL:', err);
+    return res.status(500).json({
+      error: 'Server error',
+      details: err.message,
+      stack: String(err.stack || '')
+    });
   }
 };
