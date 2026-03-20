@@ -17,7 +17,6 @@ module.exports = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // user aus db holen
     const result = await pool.query(
       'SELECT * FROM admin_users WHERE username = $1',
       [username]
@@ -28,16 +27,13 @@ module.exports = async (req, res) => {
     }
 
     const user = result.rows[0];
-
-    // passwort prüfen
     const valid = await bcrypt.compare(password, user.password_hash);
 
     if (!valid) {
       return res.status(401).json({ error: 'Wrong login' });
     }
 
-    // success
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       user: {
         id: user.id,
@@ -45,9 +41,8 @@ module.exports = async (req, res) => {
         role: user.role
       }
     });
-
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: 'Server error' });
   }
 };
