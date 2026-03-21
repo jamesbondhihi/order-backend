@@ -1,40 +1,48 @@
-const bcrypt = require('bcryptjs');
-const pool = require('../db');
+const pool = require('./db');
 
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).send('Only POST allowed');
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
     const { username, password } = req.body || {};
 
     if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+      return res.status(400).json({
+        success: false,
+        error: 'Username and password required'
+      });
     }
 
     const result = await pool.query(
-      'SELECT * FROM admin_users WHERE username = $1',
+      'SELECT id, username, password, role FROM users WHERE username = $1 LIMIT 1',
       [username]
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Wrong login' });
+      return res.status(401).json({
+        success: false,
+        error: 'Wrong login'
+      });
     }
 
     const user = result.rows[0];
-    const valid = await bcrypt.compare(password, user.password_hash);
 
-    if (!valid) {
-      return res.status(401).json({ error: 'Wrong login' });
+    if (user.password !== password) {
+      return res.status(401).json({
+        success: false,
+        error: 'Wrong login'
+      });
     }
 
     return res.status(200).json({
@@ -45,12 +53,11 @@ module.exports = async (req, res) => {
         role: user.role
       }
     });
-  } catch (err) {
-    console.error('LOGIN ERROR FULL:', err);
+  } catch (error) {
+    console.error('LOGIN ERROR:', error);
     return res.status(500).json({
-      error: 'Server error',
-      details: err.message,
-      stack: String(err.stack || '')
+      success: false,
+      error: 'Server error'
     });
   }
 };
