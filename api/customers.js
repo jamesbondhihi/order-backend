@@ -95,7 +95,8 @@ module.exports = async (req, res) => {
         priority,
         saved,
         reviewed,
-        reviewedBy
+        reviewedBy,
+        reviewed_by
       } = req.body || {};
 
       if (!id) {
@@ -111,7 +112,17 @@ module.exports = async (req, res) => {
       const current = existing.rows[0];
 
       const nextReviewed = typeof reviewed === 'boolean' ? reviewed : current.reviewed;
-      const nextReviewedBy = typeof reviewedBy === 'string' ? reviewedBy : current.reviewed_by;
+
+      const incomingReviewedBy =
+        typeof reviewedBy === 'string'
+          ? reviewedBy
+          : typeof reviewed_by === 'string'
+            ? reviewed_by
+            : null;
+
+      const nextReviewedBy =
+        incomingReviewedBy !== null ? incomingReviewedBy : current.reviewed_by;
+
       const nextReviewedAt =
         typeof reviewed === 'boolean' && reviewed === true && !current.reviewed
           ? new Date().toISOString()
