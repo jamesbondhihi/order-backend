@@ -1,13 +1,37 @@
 const pool = require('../db');
 
+function getRequestUser(req) {
+  const headerUser = req.headers['x-user'];
+
+  if (!headerUser) return null;
+
+  try {
+    return JSON.parse(headerUser);
+  } catch {
+    return null;
+  }
+}
+
+function isAdminRequest(req) {
+  const requestUser = getRequestUser(req);
+  return requestUser && requestUser.role === 'admin';
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-user');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  if (!isAdminRequest(req)) {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required'
+    });
   }
 
   try {
@@ -73,9 +97,20 @@ module.exports = async (req, res) => {
 
       const current = existing.rows[0];
 
-      const newUsername = typeof username === 'string' ? username.trim() : current.username;
-      const newPassword = typeof password === 'string' && password !== '' ? password : current.password;
-      const newRole = typeof role === 'string' ? role : current.role;
+      const newUsername =
+        typeof username === 'string' && username.trim() !== ''
+          ? username.trim()
+          : current.username;
+
+      const newPassword =
+        typeof password === 'string' && password !== ''
+          ? password
+          : current.password;
+
+      const newRole =
+        typeof role === 'string' && role.trim() !== ''
+          ? role.trim()
+          : current.role;
 
       if (!['admin', 'staff'].includes(newRole)) {
         return res.status(400).json({
