@@ -1,4 +1,4 @@
-const pool = require('./db');
+const pool = require('../db');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
