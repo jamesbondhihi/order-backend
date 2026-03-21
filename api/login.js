@@ -11,7 +11,10 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed'
+    });
   }
 
   try {
@@ -45,19 +48,30 @@ module.exports = async (req, res) => {
       });
     }
 
+    const sessionResult = await pool.query(
+      `INSERT INTO login_sessions (user_id, username, role, login_at, session_status)
+       VALUES ($1, $2, $3, NOW(), 'active')
+       RETURNING id, login_at`,
+      [user.id, user.username, user.role]
+    );
+
     return res.status(200).json({
       success: true,
       user: {
         id: user.id,
         username: user.username,
         role: user.role
+      },
+      session: {
+        id: sessionResult.rows[0].id,
+        login_at: sessionResult.rows[0].login_at
       }
     });
   } catch (error) {
     console.error('LOGIN ERROR:', error);
     return res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: error.message || 'Server error'
     });
   }
 };
