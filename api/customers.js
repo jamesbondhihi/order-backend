@@ -19,6 +19,9 @@ module.exports = async (req, res) => {
           address,
           email,
           phone,
+          note,
+          status,
+          priority,
           saved,
           reviewed,
           reviewed_by AS "reviewedBy",
@@ -37,26 +40,41 @@ module.exports = async (req, res) => {
         address = '',
         email = '',
         phone = '',
+        note = '',
+        status = '',
+        priority = '',
         saved = true
       } = req.body || {};
 
       const result = await pool.query(
         `
-          INSERT INTO customers (name, address, email, phone, saved)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO customers (name, address, email, phone, note, status, priority, saved)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           RETURNING
             id,
             name,
             address,
             email,
             phone,
+            note,
+            status,
+            priority,
             saved,
             reviewed,
             reviewed_by AS "reviewedBy",
             reviewed_at AS "reviewedAt",
             created_at AS "createdAt"
         `,
-        [name.trim(), address.trim(), email.trim(), phone.trim(), !!saved]
+        [
+          name.trim(),
+          address.trim(),
+          email.trim(),
+          phone.trim(),
+          note.trim(),
+          status.trim(),
+          priority.trim(),
+          !!saved
+        ]
       );
 
       return res.status(201).json({
@@ -72,6 +90,9 @@ module.exports = async (req, res) => {
         address,
         email,
         phone,
+        note,
+        status,
+        priority,
         saved,
         reviewed,
         reviewedBy
@@ -104,17 +125,23 @@ module.exports = async (req, res) => {
             address = $2,
             email = $3,
             phone = $4,
-            saved = $5,
-            reviewed = $6,
-            reviewed_by = $7,
-            reviewed_at = $8
-          WHERE id = $9
+            note = $5,
+            status = $6,
+            priority = $7,
+            saved = $8,
+            reviewed = $9,
+            reviewed_by = $10,
+            reviewed_at = $11
+          WHERE id = $12
           RETURNING
             id,
             name,
             address,
             email,
             phone,
+            note,
+            status,
+            priority,
             saved,
             reviewed,
             reviewed_by AS "reviewedBy",
@@ -126,6 +153,9 @@ module.exports = async (req, res) => {
           typeof address === 'string' ? address.trim() : current.address,
           typeof email === 'string' ? email.trim() : current.email,
           typeof phone === 'string' ? phone.trim() : current.phone,
+          typeof note === 'string' ? note.trim() : current.note,
+          typeof status === 'string' ? status.trim() : current.status,
+          typeof priority === 'string' ? priority.trim() : current.priority,
           typeof saved === 'boolean' ? saved : current.saved,
           nextReviewed,
           nextReviewedBy || '',
